@@ -19,11 +19,14 @@ def segment_by_shapes(viewer: napari.Viewer, in_path: Path | str, out_path: Path
         raise ValueError(f"There should be exactly 1 shapes layer. There are {len(shapes_layers)}")
     shapes_layer = shapes_layers[0]
     image_layer = next(l for l in viewer.layers if isinstance(l, Image))
-    labels = shapes_layer.to_labels(np.squeeze(image_layer.data).shape).max(axis=0)
+    labels = shapes_layer.to_labels(image_layer.data.shape).squeeze().max(axis=0)
     in_path = Path(in_path)
     data = pd.read_csv(in_path)
     for i, row in data.iterrows():
-        shape_number = labels[int(row["y"]), int(row["x"])]
+        y_pix = int(row["y"] / shapes_layer.scale[-2])
+        x_pix = int(row["x"] / shapes_layer.scale[-1])
+        shape_number = labels[y_pix, x_pix]
+        print(shape_number)
         if shape_number == 0:
             raise ValueError(f"Point missing a shape at x={row['x']}, y={row['y']}")
         data.loc[i, "cell_type"] = f"{shape_number}_{row["cell_type"]}"

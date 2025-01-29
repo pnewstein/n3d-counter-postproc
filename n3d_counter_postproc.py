@@ -26,7 +26,6 @@ def segment_by_shapes(viewer: napari.Viewer, in_path: Path | str, out_path: Path
         y_pix = int(row["y"] / shapes_layer.scale[-2])
         x_pix = int(row["x"] / shapes_layer.scale[-1])
         shape_number = labels[y_pix, x_pix]
-        print(shape_number)
         if shape_number == 0:
             raise ValueError(f"Point missing a shape at x={row['x']}, y={row['y']}")
         data.loc[i, "cell_type"] = f"{shape_number}_{row["cell_type"]}"
@@ -35,7 +34,7 @@ def segment_by_shapes(viewer: napari.Viewer, in_path: Path | str, out_path: Path
     data.to_csv(out_path)
     if summary_path is None:
         summary_path = Path(in_path.with_suffix(".summary.csv"))
-    data["cell_type"].value_counts().to_csv(summary_path)
+    data.groupby("cell_type").count()["z"].to_csv(summary_path)
     return data
     
 

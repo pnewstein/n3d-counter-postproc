@@ -51,7 +51,7 @@ def segment_by_shapes(
     return data
 
 
-def read_into_napari(path: str, low_res=False):
+def read_into_napari(path: str, low_res=False, viewer: napari.Viewer | None = None):
     ims_object = ims(path)
     assert isinstance(ims_object, ims_reader)
     if low_res:
@@ -66,13 +66,23 @@ def read_into_napari(path: str, low_res=False):
         df = pd.DataFrame(np.array(item["Spot"]))
         dfs[name] = df.loc[:, ["PositionX", "PositionY", "PositionZ"]]
         click.echo(f"{name} has length {len(df)}")
+
     if len(dfs) == 0:
         click.echo("No spots found")
+    # get channel names
+    dset_info = hf["DataSetInfo"]
+    assert isinstance(dset_info, Group)
+    image_names: list[str] = []
+    for key in dset_info.keys():
+        if key.startswith("Channel "):
+            name = b"".join(dset_info[key].attrs["Name"]).decode().split("-")[0]
+            image_names.append(f"raw-{name}-channel")
     # assert False
     data = ims_object[0, :, :, :, :]
-    viewer = napari.Viewer()
+    if viewer is None:
+        viewer = napari.Viewer(title=Path(path).name)
     scale = ims_object.resolution
-    viewer.add_image(data, channel_axis=0, scale=scale)
+    viewer.add_image(data, channel_axis=0, scale=scale, name=image_names)
     configs: list[CellTypeConfig] = []
     if len(dfs) == 0:
         return viewer
@@ -100,7 +110,13 @@ def read_into_napari(path: str, low_res=False):
 
 @click.command("read-into-napari", help="View an imaris file with napari 3d counter")
 @click.argument("path", type=click.Path(exists=True, dir_okay=False))
-@click.option("--low-res/--high-res", default=False, help=())
+@click.option(
+    "--low-res/--high-res",
+    default=False,
+    help=(
+        "read at full resolution or a downsampled copy saved in the file. Default is --high-res"
+    ),
+)
 def main(path: str, low_res=False):
     read_into_napari(path, low_res)
     napari.run()

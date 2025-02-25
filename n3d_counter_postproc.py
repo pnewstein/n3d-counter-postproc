@@ -24,6 +24,10 @@ def segment_by_shapes(
 ):
     """
     takes a shapes layer and uses it to split up the labels of a napari 3d counter
+
+    arguments are viewer, and path to a csv file made by napari-3d-counter
+    optionaly takes two other paths for the layers whith changed names, and the
+        summary including the number of points in each category
     """
     shapes_layers = [l for l in viewer.layers if isinstance(l, Shapes)]
     if len(shapes_layers) != 1:
@@ -52,6 +56,11 @@ def segment_by_shapes(
 
 
 def read_into_napari(path: str, low_res=False, viewer: napari.Viewer | None = None):
+    """
+    view an imaris file with napari-3d-counter
+
+    optionaly takes in a viewer, and can optionaly load the low res version
+    """
     ims_object = ims(path)
     assert isinstance(ims_object, ims_reader)
     if low_res:

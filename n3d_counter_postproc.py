@@ -90,16 +90,11 @@ def read_into_napari(path: str, low_res=False):
         i_max = len(df)
         index = range(i, i_max)
         out_df.loc[index, "cell_type"] = name
-        out_df.loc[index, "x"] = df["PositionX"] / scale[2]
-        out_df.loc[index, "y"] = df["PositionY"] / scale[1]
-        out_df.loc[index, "z"] = df["PositionZ"] / scale[0]
+        out_df.loc[index, "x"] = df["PositionX"]
+        out_df.loc[index, "y"] = df["PositionY"]
+        out_df.loc[index, "z"] = df["PositionZ"]
     count_3d.read_points_from_df(out_df)
     viewer.window.add_dock_widget(count_3d)
-    for layer in viewer.layers:
-        if layer.ndim == 3:
-            layer.scale = scale
-        if layer.ndim == 2:
-            layer.scale = scale[1:]
     return viewer
 
 
